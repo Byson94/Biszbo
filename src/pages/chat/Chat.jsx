@@ -20,86 +20,77 @@ function Chat() {
         throw new TypeError("Invalid input on lexicographic sorting");
       }
     }
-
     const lowercased = strings.map((str) => str.toLowerCase());
-    const sortedStrings = [...lowercased].sort().join("_");
-    return sortedStrings;
+    return [...lowercased].sort().join("_");
   }
 
   const handleSendMessage = async () => {
-    if (currentUser !== "") {
-      const data = await fetch(
-        "https://biszbo-backend.onrender.com/addMessage",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: newMessage,
-            UID: ourUid,
-            contentID: lexicographicSort([currentUser, ourUid]),
-          }),
-        }
-      );
+    if (!newMessage.trim() || !currentUser || !ourUid) return;
 
-      console.log(await data.json());
-
-      if (newMessage.trim()) {
-        setMessages([...messages, newMessage]);
-        setNewMessage("");
+    const response = await fetch(
+      "https://biszbo-backend.onrender.com/addMessage",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: newMessage,
+          UID: ourUid,
+          contentID: lexicographicSort([currentUser, ourUid]),
+        }),
       }
+    );
+
+    const result = await response.json();
+
+    console.log(result);
+
+    if (result.success) {
+      setMessages((prev) => [...prev, newMessage]);
+      setNewMessage("");
+    } else {
+      alert("Failed to send message");
     }
   };
 
   useEffect(() => {
-    const loadData = async () => {
+    const loadSession = async () => {
       let uid;
-      const savedUID = sessionStorage.getItem("BISZBO_USERID");
-      if (savedUID) {
-        uid = JSON.parse(savedUID);
-        setOurUid(uid);
+      const saved = sessionStorage.getItem("BISZBO_USERID");
+      if (saved) {
+        uid = JSON.parse(saved);
       } else {
         const data = await getSession();
         uid = data.session.user.id;
         sessionStorage.setItem("BISZBO_USERID", JSON.stringify(uid));
-        setOurUid(uid);
       }
-
+      setOurUid(uid);
       const contacts = await getAllContacts(uid);
       setUsers(contacts.contacts);
     };
 
-    loadData();
+    loadSession();
   }, []);
 
   const handleAddUser = async () => {
-    const UID = prompt(
-      "Paste in the user ID of the person whom you want to talk to."
-    );
-
-    setUsers((prevUsers) => [...prevUsers, UID]);
+    const UID = prompt("Enter the UID of the user you want to add:");
+    if (!UID) return;
 
     const data = await addToContact(ourUid, UID);
     if (data) {
-      console.log("Registration successful");
+      setUsers((prev) => [...prev, UID]);
+      console.log("User added successfully");
     } else {
-      setUsers((prevUsers) => prevUsers.filter((user) => user !== UID));
-      alert("User not found");
+      alert("User not found or failed to add.");
     }
   };
 
   const handleUserClick = async (user) => {
     setCurrentUser(user);
-    setMessages([]);
-
     const data = await fetch(
       "https://biszbo-backend.onrender.com/getAllMessages",
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contentID: lexicographicSort([user, ourUid]),
         }),
@@ -107,81 +98,67 @@ function Chat() {
     );
 
     const messageData = await data.json();
-    const messagesInData = messageData.messages.map(
-      (element) => element.message
-    );
-    //sessionStorage.setItem(lexicographicSort([user, ourUid]), JSON.stringify(messagesInData));
-    setMessages(messagesInData);
+    const messageList = messageData.messages.map((m) => m.message);
+    setMessages(messageList);
   };
 
-  // check for messages and contacts
-  setInterval(async () => {
-    //checkmessage
-    const data = await fetch(
-      "https://biszbo-backend.onrender.com/getAllMessages",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contentID: lexicographicSort([currentUser, ourUid]),
-        }),
+  useEffect(() => {
+    if (!ourUid || !currentUser) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const data = await fetch(
+          "https://biszbo-backend.onrender.com/getAllMessages",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contentID: lexicographicSort([currentUser, ourUid]),
+            }),
+          }
+        );
+
+        const messageData = await data.json();
+        const messageList = messageData.messages.map((m) => m.message);
+        setMessages(messageList);
+
+        const contacts = await getAllContacts(ourUid);
+        setUsers(contacts.contacts);
+      } catch (err) {
+        console.error("Interval error:", err);
       }
-    );
+    }, 5000);
 
-    const messageData = await data.json();
-    const messagesInData = messageData.messages.map(
-      (element) => element.message
-    );
-    //sessionStorage.setItem(
-    //  lexicographicSort([user, ourUid]),
-    //  JSON.stringify(messagesInData)
-    //);
-    setMessages(messagesInData);
-
-    // contact
-    const contacts = await getAllContacts(ourUid);
-    setUsers(contacts.contacts);
-  }, 5000);
+    return () => clearInterval(interval);
+  }, [ourUid, currentUser]);
 
   return (
     <div className={styles.chatContainer}>
-      {" "}
       <div className={styles.sidebar}>
-        {" "}
         <div className={styles.userList}>
-          {" "}
           <h3>Users</h3>
           <ul>
-            {" "}
-            {users.map((user, index) => (
-              <li key={index} onClick={() => handleUserClick(user)}>
+            {users.map((user, i) => (
+              <li key={i} onClick={() => handleUserClick(user)}>
                 {user}
               </li>
             ))}
-          </ul>{" "}
-          {/* users will come here */}
+          </ul>
         </div>
         <button className={styles.addUserButton} onClick={handleAddUser}>
-          {" "}
           Add User
         </button>
       </div>
       <div className={styles.chatWindow}>
-        {" "}
         <div className={styles.topBar}>{currentUser}</div>
         <div className={styles.messages}>
-          {" "}
-          {messages.map((msg, index) => (
-            <div key={index} className={styles.message}>
-              {" "}
+          {messages.map((msg, i) => (
+            <div key={i} className={styles.message}>
               <span className={styles.userName}>User</span>: {msg}
             </div>
           ))}
         </div>
         <div className={styles.inputSection}>
-          {" "}
           <input
             type="text"
             className={styles.messageInput}
@@ -190,7 +167,6 @@ function Chat() {
             onChange={(e) => setNewMessage(e.target.value)}
           />
           <button className={styles.sendButton} onClick={handleSendMessage}>
-            {" "}
             Send
           </button>
         </div>
