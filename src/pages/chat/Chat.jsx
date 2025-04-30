@@ -28,17 +28,20 @@ function Chat() {
 
   const handleSendMessage = async () => {
     if (currentUser !== "") {
-      const data = await fetch("http://localhost:3000/addMessage", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: newMessage,
-          UID: ourUid,
-          contentID: lexicographicSort([currentUser, ourUid]),
-        }),
-      });
+      const data = await fetch(
+        "https://biszbo-backend.onrender.com/addMessage",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: newMessage,
+            UID: ourUid,
+            contentID: lexicographicSort([currentUser, ourUid]),
+          }),
+        }
+      );
 
       console.log(await data.json());
 
@@ -90,15 +93,18 @@ function Chat() {
     setCurrentUser(user);
     setMessages([]);
 
-    const data = await fetch("http://localhost:3000/getAllMessages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contentID: lexicographicSort([user, ourUid]),
-      }),
-    });
+    const data = await fetch(
+      "https://biszbo-backend.onrender.com/getAllMessages",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contentID: lexicographicSort([user, ourUid]),
+        }),
+      }
+    );
 
     const messageData = await data.json();
     const messagesInData = messageData.messages.map(
@@ -111,15 +117,18 @@ function Chat() {
   // check for messages and contacts
   setInterval(async () => {
     //checkmessage
-    const data = await fetch("http://localhost:3000/getAllMessages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contentID: lexicographicSort([currentUser, ourUid]),
-      }),
-    });
+    const data = await fetch(
+      "https://biszbo-backend.onrender.com/getAllMessages",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contentID: lexicographicSort([currentUser, ourUid]),
+        }),
+      }
+    );
 
     const messageData = await data.json();
     const messagesInData = messageData.messages.map(
