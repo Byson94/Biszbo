@@ -15,6 +15,7 @@ function Chat() {
   const [ourUid, setOurUid] = useState(null);
 
   function lexicographicSort(strings) {
+    if (!ourUid || !currentUser) return;
     for (const str of strings) {
       if (typeof str !== "string" || !/^[a-fA-F0-9-]+$/.test(str)) {
         throw new TypeError("Invalid input on lexicographic sorting");
@@ -44,7 +45,7 @@ function Chat() {
 
     console.log(result);
 
-    if (result.success) {
+    if (result.message) {
       setMessages((prev) => [...prev, newMessage]);
       setNewMessage("");
     } else {
