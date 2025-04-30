@@ -6,7 +6,7 @@ import ChatPage from "./pages/chat/Chat";
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/Biszbo">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginPage />} />
