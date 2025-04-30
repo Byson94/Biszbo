@@ -6,7 +6,7 @@ import ChatPage from "./pages/chat/Chat";
 
 function App() {
   return (
-    <BrowserRouter basename={process.env.REACT_APP_BASE_PATH || "/"}>
+    <BrowserRouter basename={import.meta.env.VITE_APP_BASE_PATH || "/"}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginPage />} />
