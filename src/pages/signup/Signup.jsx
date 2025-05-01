@@ -19,7 +19,7 @@ function SignUp() {
 
     if (data) {
       console.log("Sign-up successful!");
-      navigate("/chat");
+      navigate("/login");
     }
   };
 

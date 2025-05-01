@@ -13,6 +13,8 @@ function Chat() {
   const [currentUser, setCurrentUser] = useState("");
   const [users, setUsers] = useState([]);
   const [ourUid, setOurUid] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newUserUID, setNewUserUID] = useState("");
 
   function lexicographicSort(strings) {
     for (const str of strings) {
@@ -72,15 +74,23 @@ function Chat() {
   }, []);
 
   const handleAddUser = async () => {
-    const UID = prompt("Enter the UID of the user you want to add:");
-    if (!UID) return;
+    if (!newUserUID.trim()) return;
 
-    const data = await addToContact(ourUid, UID);
-    if (data) {
-      setUsers((prev) => [...prev, UID]);
-      console.log("User added successfully");
-    } else {
-      alert("User not found or failed to add.");
+    try {
+      const data = await addToContact(ourUid, newUserUID);
+
+      if (data) {
+        setUsers((prev) => [...prev, newUserUID]);
+        console.log("User added successfully");
+      } else {
+        alert("User not found or failed to add.");
+      }
+    } catch (error) {
+      console.error("Error adding user:", error);
+      alert("An error occurred while adding the user.");
+    } finally {
+      setIsModalOpen(false);
+      setNewUserUID("");
     }
   };
 
@@ -150,7 +160,10 @@ function Chat() {
             ))}
           </ul>
         </div>
-        <button className={styles.addUserButton} onClick={handleAddUser}>
+        <button
+          className={styles.addUserButton}
+          onClick={() => setIsModalOpen(true)}
+        >
           Add User
         </button>
       </div>
@@ -176,6 +189,22 @@ function Chat() {
           </button>
         </div>
       </div>
+
+      {isModalOpen && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <h3>Enter User UID</h3>
+            <input
+              type="text"
+              value={newUserUID}
+              onChange={(e) => setNewUserUID(e.target.value)}
+              placeholder="User UID"
+            />
+            <button onClick={handleAddUser}>Add</button>
+            <button onClick={() => setIsModalOpen(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
