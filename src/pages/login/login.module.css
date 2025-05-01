@@ -1,0 +1,94 @@
+.pageCenter {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+}
+
+.parent {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+}
+
+.textinput {
+  width: 100%;
+  height: 40px;
+  padding-left: 16px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 2px solid #1abc9c;
+  border-radius: 5px;
+  color: #ecf0f1;
+  outline: none;
+}
+
+.EmailLabel,
+.PasswordLabel {
+  left: 12px;
+  top: 10px;
+  background-color: transparent;
+  padding: 0 4px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  font-weight: bold;
+}
+
+.loginTitle {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  color: white;
+}
+
+.buttonWrapper,
+.extraTextWrapper {
+  width: 100%;
+  max-width: 300px;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.submit {
+  width: 100%;
+  background-color: #1abc9c;
+  color: #ffffff;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease-in-out;
+}
+
+.submit:hover {
+  filter: brightness(90%);
+}
+
+.submit:active {
+  transform: scale(0.98);
+}
+
+.forgotPassword,
+.signupLink {
+  display: inline-block;
+  margin-top: 0.75rem;
+  color: teal;
+  cursor: pointer;
+  user-select: none;
+}
+
+@media (max-height: 600px) {
+  .pageCenter {
+    justify-content: flex-start;
+    padding-top: 3rem;
+  }
+
+  .loginTitle {
+    margin-bottom: 1rem;
+  }
+}

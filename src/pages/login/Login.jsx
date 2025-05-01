@@ -1,7 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { login } from "../../supabase";
+import styles from "./login.module.css";
 
 function LoginPage() {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -17,31 +21,55 @@ function LoginPage() {
     }
   };
 
+  const handleSignup = () => {
+    navigate("/signup");
+  };
+
+  const handleForgotpassword = () => {
+    navigate();
+  };
+
   return (
-    <div>
-      <h1>Login to Biszbo</h1>
+    <div className={styles.pageCenter}>
+      <h1 className={styles.loginTitle}>Welcome Back</h1>
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email:</label>
+        <div className={styles.parent}>
+          <label className={styles.EmailLabel}>Email Address:</label>
           <input
+            className={styles.textinput}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
-        <div>
-          <label>Password:</label>
+        <div className={styles.parent}>
+          <label className={styles.PasswordLabel}>Password:</label>
           <input
+            className={styles.textinput}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>
+        <div className={styles.extraTextWrapper}>
+          <a className={styles.forgotPassword} onClick={handleForgotpassword}>
+            Forgot password?
+          </a>
+        </div>
         {error && <p style={{ color: "red" }}>{error}</p>}
-        <div>
-          <button type="submit">Login</button>
+        <div className={styles.buttonWrapper}>
+          <button type="submit" className={styles.submit}>
+            Login
+          </button>
+
+          <p>
+            Dont have an account?{" "}
+            <a className={styles.signupLink} onClick={handleSignup}>
+              Sign up
+            </a>
+          </p>
         </div>
       </form>
     </div>

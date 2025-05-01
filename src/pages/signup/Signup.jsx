@@ -1,7 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import styles from "./signup.module.css";
 import { register } from "../../supabase";
 
 function SignUp() {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -18,22 +22,28 @@ function SignUp() {
     }
   };
 
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
   return (
-    <div>
-      <h1>Sign Up to Biszbo</h1>
+    <div className={styles.pageCenter}>
+      <h1 className={styles.signupTitle}>Sign Up to Biszbo</h1>
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email:</label>
+        <div className={styles.parent}>
+          <label className={styles.EmailLabel}>Email:</label>
           <input
+            className={styles.textinput}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
-        <div>
-          <label>Password:</label>
+        <div className={styles.parent}>
+          <label className={styles.PasswordLabel}>Password:</label>
           <input
+            className={styles.textinput}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -41,8 +51,16 @@ function SignUp() {
           />
         </div>
         {error && <p style={{ color: "red" }}>{error}</p>}
-        <div>
-          <button type="submit">Sign Up</button>
+        <div className={styles.buttonWrapper}>
+          <button type="submit" className={styles.submit}>
+            Sign Up
+          </button>
+          <p>
+            Already have an account?{" "}
+            <a className={styles.loginLink} onClick={handleLogin}>
+              Sign in
+            </a>
+          </p>
         </div>
       </form>
     </div>
