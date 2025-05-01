@@ -5,6 +5,8 @@ import {
   addToContact,
   getAllContacts,
   removeFromContact,
+  getUIDfromUsername,
+  getUsernamefromUID,
 } from "../../supabase";
 
 function Chat() {
@@ -15,6 +17,8 @@ function Chat() {
   const [ourUid, setOurUid] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newUserUID, setNewUserUID] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+  const [usernameMap, setUsernameMap] = useState({});
 
   function lexicographicSort(strings) {
     for (const str of strings) {
@@ -47,7 +51,12 @@ function Chat() {
     console.log(result);
 
     if (result.message) {
-      setMessages((prev) => [...prev, newMessage]);
+      setMessages((prev) =>
+        Array.isArray(prev)
+          ? [...prev, { UID: ourUid, message: newMessage }]
+          : [{ UID: ourUid, message: newMessage }]
+      );
+
       setNewMessage("");
     } else {
       alert("Failed to send message");
@@ -56,31 +65,61 @@ function Chat() {
 
   useEffect(() => {
     const loadSession = async () => {
-      let uid;
-      const saved = sessionStorage.getItem("BISZBO_USERID");
-      if (saved) {
-        uid = JSON.parse(saved);
-      } else {
-        const data = await getSession();
-        uid = data.session.user.id;
-        sessionStorage.setItem("BISZBO_USERID", JSON.stringify(uid));
+      const sessionData = await getSession();
+      const verifiedUID = sessionData.session?.user?.id;
+
+      if (!verifiedUID) {
+        return;
       }
-      setOurUid(uid);
-      const contacts = await getAllContacts(uid);
-      setUsers(contacts.contacts);
+
+      setOurUid(verifiedUID);
+      sessionStorage.setItem("BISZBO_USERID", JSON.stringify(verifiedUID));
+
+      const contacts = await getAllContacts(verifiedUID);
+      const usernames = await Promise.all(
+        contacts.contacts.map(async (contactUID) => {
+          const username = await getUsernamefromUID(contactUID);
+          return { uid: contactUID, username };
+        })
+      );
+
+      setUsers(usernames);
     };
 
+    const clearCache = () => {
+      setOurUid(null);
+      setMessages([]);
+      setUsers([]);
+      setUsernameMap({});
+    };
+
+    clearCache();
     loadSession();
   }, []);
 
   const handleAddUser = async () => {
-    if (!newUserUID.trim()) return;
+    if (!newUsername.trim()) return;
 
     try {
-      const data = await addToContact(ourUid, newUserUID);
+      const uidFromUN = await getUIDfromUsername(newUsername);
+
+      const res = await fetch(
+        "https://biszbo-backend.onrender.com/contacts/add",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userA: ourUid, userB: uidFromUN }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to add contact");
 
       if (data) {
-        setUsers((prev) => [...prev, newUserUID]);
+        setUsers((prev) => [
+          ...prev,
+          { uid: uidFromUN, username: newUsername },
+        ]);
         console.log("User added successfully");
       } else {
         alert("User not found or failed to add.");
@@ -90,21 +129,22 @@ function Chat() {
       alert("An error occurred while adding the user.");
     } finally {
       setIsModalOpen(false);
-      setNewUserUID("");
+      setNewUsername("");
     }
   };
 
-  const handleUserClick = async (user) => {
-    setCurrentUser(user);
+  const handleUserClick = async (uid) => {
+    setCurrentUser(uid);
+    setMessages([]);
 
-    if (!user || !ourUid) return;
+    if (!uid || !ourUid) return;
     const data = await fetch(
       "https://biszbo-backend.onrender.com/getAllMessages",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contentID: lexicographicSort([user, ourUid]),
+          contentID: lexicographicSort([uid, ourUid]),
         }),
       }
     );
@@ -114,6 +154,23 @@ function Chat() {
     if (messageData.success) {
       const messageList = messageData.messages;
       setMessages(messageList);
+
+      const missingUIDs = messageList
+        .map((msg) => msg.UID)
+        .filter((uid) => !(uid in usernameMap));
+
+      const newUsernames = await Promise.all(
+        missingUIDs.map(async (uid) => {
+          const username = await getUsernamefromUID(uid);
+          return { uid, username };
+        })
+      );
+
+      const updatedMap = { ...usernameMap };
+      newUsernames.forEach(({ uid, username }) => {
+        updatedMap[uid] = username;
+      });
+      setUsernameMap(updatedMap);
     }
   };
 
@@ -138,7 +195,13 @@ function Chat() {
         setMessages(messageList);
 
         const contacts = await getAllContacts(ourUid);
-        setUsers(contacts.contacts);
+        const usernames = await Promise.all(
+          contacts.contacts.map(async (contactUID) => {
+            const username = await getUsernamefromUID(contactUID);
+            return { uid: contactUID, username };
+          })
+        );
+        setUsers(usernames);
       } catch (err) {
         console.error("Interval error:", err);
       }
@@ -153,11 +216,15 @@ function Chat() {
         <div className={styles.userList}>
           <h3>Users</h3>
           <ul>
-            {users.map((user, i) => (
-              <li key={i} onClick={() => handleUserClick(user)}>
-                {user}
-              </li>
-            ))}
+            {Array.isArray(users) && users.length > 0 ? (
+              users.map((user, i) => (
+                <li key={i} onClick={() => handleUserClick(user.uid)}>
+                  {user.username}
+                </li>
+              ))
+            ) : (
+              <p>No users yet</p>
+            )}
           </ul>
         </div>
         <button
@@ -168,13 +235,22 @@ function Chat() {
         </button>
       </div>
       <div className={styles.chatWindow}>
-        <div className={styles.topBar}>{currentUser}</div>
+        <div className={styles.topBar}>
+          {users.find((u) => u.uid === currentUser)?.username || ""}
+        </div>
         <div className={styles.messages}>
-          {messages.map((msg, i) => (
-            <div key={i} className={styles.message}>
-              <span className={styles.userName}>{msg.UID}</span>: {msg.message}
-            </div>
-          ))}
+          {Array.isArray(messages) && messages.length > 0 ? (
+            messages.map((msg, i) => (
+              <div key={i} className={styles.message}>
+                <span className={styles.userName}>
+                  {usernameMap[msg.UID] || msg.UID}
+                </span>
+                : {msg.message}
+              </div>
+            ))
+          ) : (
+            <p></p>
+          )}
         </div>
         <div className={styles.inputSection}>
           <input
@@ -193,12 +269,12 @@ function Chat() {
       {isModalOpen && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
-            <h3>Enter User UID</h3>
+            <h3>Enter Username</h3>
             <input
               type="text"
-              value={newUserUID}
-              onChange={(e) => setNewUserUID(e.target.value)}
-              placeholder="User UID"
+              value={newUsername}
+              onChange={(e) => setNewUsername(e.target.value)}
+              placeholder="User Username"
             />
             <button onClick={handleAddUser}>Add</button>
             <button onClick={() => setIsModalOpen(false)}>Cancel</button>

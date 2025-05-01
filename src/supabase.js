@@ -44,6 +44,90 @@ export async function logout() {
   return (success = true);
 }
 
+export async function usernameTaken(username) {
+  const { data: existingUsername, error: usernameError } = await supabase
+    .from("Users")
+    .select("uuid")
+    .eq("username", username)
+    .single();
+
+  if (usernameError && usernameError.code !== "PGRST116")
+    throw new Error(usernameError.message);
+
+  if (existingUsername) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+export async function setUIDandUsername(uuid, username) {
+  const { data: existingUsername, error: usernameError } = await supabase
+    .from("Users")
+    .select("uuid")
+    .eq("username", username)
+    .single();
+
+  if (usernameError && usernameError.code !== "PGRST116")
+    throw new Error(usernameError.message);
+
+  if (existingUsername) throw new Error("Username is already taken");
+
+  const { data: existingUser, error: userError } = await supabase
+    .from("Users")
+    .select("username")
+    .eq("uuid", uuid)
+    .single();
+
+  if (userError && userError.code !== "PGRST116")
+    throw new Error(userError.message);
+
+  if (existingUser) throw new Error("User already registered");
+
+  const { error: insertError } = await supabase
+    .from("Users")
+    .insert({ uuid, username });
+
+  if (insertError)
+    throw new Error("Could not register user: " + insertError.message);
+}
+
+export async function getUIDfromUsername(username) {
+  const { data: existingUser, error: userError } = await supabase
+    .from("Users")
+    .select("uuid")
+    .eq("username", username)
+    .single();
+
+  if (userError && userError.code !== "PGRST116") {
+    throw new Error(userError.message);
+  }
+
+  if (!existingUser) {
+    throw new Error("UUID not found!");
+  }
+
+  return existingUser.uuid;
+}
+
+export async function getUsernamefromUID(uuid) {
+  const { data: existingUser, error: userError } = await supabase
+    .from("Users")
+    .select("username")
+    .eq("uuid", uuid)
+    .single();
+
+  if (userError && userError.code !== "PGRST116") {
+    throw new Error(userError.message);
+  }
+
+  if (!existingUser) {
+    throw new Error("Username not found!");
+  }
+
+  return existingUser.username;
+}
+
 ////////////////////////////////
 //          CONTACTS          //
 ////////////////////////////////
@@ -71,11 +155,15 @@ async function updateContacts(uuid, newContact) {
     const currentContacts = data.contacts || [];
     if (!currentContacts.includes(newContact)) {
       updatedContacts = [...currentContacts, newContact];
-      const { error: updateError } = await supabase
-        .from("Contacts")
-        .update({ contacts: updatedContacts })
-        .eq("uuid", uuid);
-      if (updateError) throw new Error(updateError.message);
+      if (currentContacts.length < 50) {
+        const { error: updateError } = await supabase
+          .from("Contacts")
+          .update({ contacts: updatedContacts })
+          .eq("uuid", uuid);
+        if (updateError) throw new Error(updateError.message);
+      } else {
+        throw new Error("50 contact limit REACHED!"); // supabase WILL ALSO return error if it passes 50
+      }
     }
   } else {
     updatedContacts = [newContact];

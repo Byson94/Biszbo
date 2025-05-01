@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../../supabase";
+import { login, getSession } from "../../supabase";
 import styles from "./login.module.css";
 
 function LoginPage() {
@@ -10,6 +10,26 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      const data = await getSession();
+      sessionStorage.setItem(
+        "BISZBO_USERID",
+        JSON.stringify(data.session.user.id)
+      );
+    };
+
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const data = await getSession();
+    sessionStorage.setItem(
+      "BISZBO_USERID",
+      JSON.stringify(data.session.user.id)
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -18,6 +38,7 @@ function LoginPage() {
 
     if (data) {
       console.log("Login successful!");
+      checkAuth();
       navigate("/chat");
     }
   };

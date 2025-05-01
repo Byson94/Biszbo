@@ -26,8 +26,7 @@
   outline: none;
 }
 
-.EmailLabel,
-.PasswordLabel {
+.Label {
   left: 12px;
   top: 10px;
   background-color: transparent;
