@@ -18,7 +18,8 @@ function SignUp() {
     const data = await register(email, password);
 
     if (data) {
-      alert("Sign-up successful!");
+      console.log("Sign-up successful!");
+      navigate("/chat");
     }
   };
 

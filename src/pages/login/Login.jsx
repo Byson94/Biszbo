@@ -17,7 +17,8 @@ function LoginPage() {
     const data = await login(email, password);
 
     if (data) {
-      alert("Login successful!");
+      console.log("Login successful!");
+      navigate("/chat");
     }
   };
 

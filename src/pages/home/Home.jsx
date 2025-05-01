@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "./Nav";
 import Button from "./Button";
-import { getSession } from "../../supabase";
+import { getSession, logout } from "../../supabase";
 
 function HomePage() {
   const navigate = useNavigate();
@@ -36,13 +36,10 @@ function HomePage() {
   };
 
   const handleLogoutClick = async () => {
-    await fetch("http://localhost:3000/logout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-    });
-    setSession(false);
-    navigate("/login");
+    const data = logout();
+    if ((data.success = true)) {
+      setSession(false);
+    }
   };
 
   const handleChatClick = () => {

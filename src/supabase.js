@@ -36,6 +36,14 @@ export async function getUserFromToken(token) {
   return data;
 }
 
+export async function logout() {
+  const { error } = await supabase.auth.signOut();
+
+  if (error) throw new Error("Encountered an error while trying to logout");
+
+  return (success = true);
+}
+
 ////////////////////////////////
 //          CONTACTS          //
 ////////////////////////////////
