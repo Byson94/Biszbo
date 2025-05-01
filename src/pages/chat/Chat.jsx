@@ -15,7 +15,6 @@ function Chat() {
   const [ourUid, setOurUid] = useState(null);
 
   function lexicographicSort(strings) {
-    if (!ourUid || !currentUser) return;
     for (const str of strings) {
       if (typeof str !== "string" || !/^[a-fA-F0-9-]+$/.test(str)) {
         throw new TypeError("Invalid input on lexicographic sorting");
@@ -87,6 +86,8 @@ function Chat() {
 
   const handleUserClick = async (user) => {
     setCurrentUser(user);
+
+    if (!user || !ourUid) return;
     const data = await fetch(
       "https://biszbo-backend.onrender.com/getAllMessages",
       {
@@ -99,8 +100,11 @@ function Chat() {
     );
 
     const messageData = await data.json();
-    const messageList = messageData.messages.map((m) => m.message);
-    setMessages(messageList);
+    console.log(messageData);
+    if (messageData.success) {
+      const messageList = messageData.messages;
+      setMessages(messageList);
+    }
   };
 
   useEffect(() => {
@@ -120,7 +124,7 @@ function Chat() {
         );
 
         const messageData = await data.json();
-        const messageList = messageData.messages.map((m) => m.message);
+        const messageList = messageData.messages;
         setMessages(messageList);
 
         const contacts = await getAllContacts(ourUid);
@@ -155,7 +159,7 @@ function Chat() {
         <div className={styles.messages}>
           {messages.map((msg, i) => (
             <div key={i} className={styles.message}>
-              <span className={styles.userName}>User</span>: {msg}
+              <span className={styles.userName}>{msg.UID}</span>: {msg.message}
             </div>
           ))}
         </div>
