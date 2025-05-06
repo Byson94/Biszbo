@@ -32,12 +32,16 @@ function Chat() {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !currentUser || !ourUid) return;
+    const token = await getSession();
 
     const response = await fetch(
       "https://biszbo-backend.onrender.com/addMessage",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           message: newMessage,
           UID: ourUid,
@@ -138,11 +142,16 @@ function Chat() {
     setMessages([]);
 
     if (!uid || !ourUid) return;
+    const token = await getSession();
+
     const data = await fetch(
       "https://biszbo-backend.onrender.com/getAllMessages",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           contentID: lexicographicSort([uid, ourUid]),
         }),
@@ -179,11 +188,16 @@ function Chat() {
 
     const interval = setInterval(async () => {
       try {
+        const token = await getSession();
+
         const data = await fetch(
           "https://biszbo-backend.onrender.com/getAllMessages",
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
             body: JSON.stringify({
               contentID: lexicographicSort([currentUser, ourUid]),
             }),
