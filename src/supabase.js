@@ -162,7 +162,7 @@ async function updateContacts(uuid, newContact) {
           .eq("uuid", uuid);
         if (updateError) throw new Error(updateError.message);
       } else {
-        throw new Error("50 contact limit REACHED!"); // supabase WILL ALSO return error if it passes 50
+        throw new Error("50 contact limit REACHED!");
       }
     }
   } else {
