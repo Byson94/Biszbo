@@ -145,7 +145,6 @@ function Chat() {
     if (!uid || !ourUid) return;
     const session = await getSession();
     const token = session?.session?.access_token;
-    console.log(token);
 
     const data = await fetch(
       "https://biszbo-backend.onrender.com/getAllMessages",
