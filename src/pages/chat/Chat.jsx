@@ -32,7 +32,8 @@ function Chat() {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !currentUser || !ourUid) return;
-    const token = await getSession();
+    const session = await getSession();
+    const token = session?.session?.access_token;
 
     const response = await fetch(
       "https://biszbo-backend.onrender.com/addMessage",
@@ -142,7 +143,9 @@ function Chat() {
     setMessages([]);
 
     if (!uid || !ourUid) return;
-    const token = await getSession();
+    const session = await getSession();
+    const token = session?.session?.access_token;
+    console.log(token);
 
     const data = await fetch(
       "https://biszbo-backend.onrender.com/getAllMessages",
@@ -188,7 +191,8 @@ function Chat() {
 
     const interval = setInterval(async () => {
       try {
-        const token = await getSession();
+        const session = await getSession();
+        const token = session?.session?.access_token;
 
         const data = await fetch(
           "https://biszbo-backend.onrender.com/getAllMessages",
