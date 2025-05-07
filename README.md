@@ -1,8 +1,13 @@
 # Biszbo
 
-Biszbo is an educational chat app.
-
-> NOTE: Due of regional differences, the messages could be sent/fetched really slow.
+Biszbo is an educational and secure chat app.
 
 Backend: https://github.com/Byson94/Biszbo-Backend
 
+## Features & Tools used
+
+|         Feature         | Tool used |
+| ----------------------- | --------- |
+|  Authentication system  | Supabase  |
+|  Contact System         | Supabase  |
+|  Messaging system       | MongoDB   |
